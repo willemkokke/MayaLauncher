@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.IO;
+using System.Text;
 
 namespace MayaLauncher
 {
@@ -82,10 +83,9 @@ namespace MayaLauncher
             try
             {
                 var result = new MayaFileVersion();
+                MayaBinaryParser parser = new MayaBinaryParser(file);
+                parser.Parse();
 
-                using (BinaryReader writer = new BinaryReader(File.Open(file, FileMode.Open)))
-                {
-                }
                 return result;
             }
             catch (System.Exception e)

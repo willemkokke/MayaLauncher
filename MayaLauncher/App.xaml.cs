@@ -144,7 +144,7 @@ namespace MayaLauncher
                         case LaunchType.ChooseVersion:
                             break;
                         case LaunchType.LatestVersion:
-                            Maya.Launch(Maya.LatestVersion, AdjustEnvironment, filename);
+                            //Maya.Launch(Maya.LatestVersion, AdjustEnvironment, filename);
                             break;
                     }
                 }
@@ -156,7 +156,7 @@ namespace MayaLauncher
             environment["MAYA_DISABLE_CIP"] = "1";
             environment["MAYA_DISABLE_CER"] = "1";
 
-            PrependToEnvironment(environment, "MAYA_MODULE_PATH", @"E:\Projects\humain-mayatools");
+            PrependToEnvironment(environment, "MAYA_MODULE_PATH", @"C:\repositories\name-generator");
         }
 
         private static void PrependToEnvironment(IDictionary<string, string> environment, string variable, string value)

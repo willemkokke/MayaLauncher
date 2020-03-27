@@ -34,10 +34,7 @@ namespace MayaLauncher
                     }
                 }
 
-                if (ServicePack > 0)
-                {
-                    Name += "." + ServicePack.ToString();
-                }
+                Name += "." + ServicePack.ToString();
             }
 
             public string GetExectablePath()
