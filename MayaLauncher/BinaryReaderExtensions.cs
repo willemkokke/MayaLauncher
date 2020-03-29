@@ -103,6 +103,30 @@ namespace MayaLauncher
             }
         }
 
+        public static UInt64 ReadUInt64BE(this BinaryReader reader)
+        {
+            if (BitConverter.IsLittleEndian)
+            {
+                return BitConverter.ToUInt64(reader.ReadBytes(sizeof(UInt64)).Reverse(), 0);
+            }
+            else
+            {
+                return reader.ReadUInt64(); ;
+            }
+        }
+
+        public static Int64 ReadInt64BE(this BinaryReader reader)
+        {
+            if (BitConverter.IsLittleEndian)
+            {
+                return BitConverter.ToInt64(reader.ReadBytes(sizeof(Int64)).Reverse(), 0);
+            }
+            else
+            {
+                return reader.ReadInt64();
+            }
+        }
+
         private static byte[] Reverse(this byte[] b)
         {
             Array.Reverse(b);
