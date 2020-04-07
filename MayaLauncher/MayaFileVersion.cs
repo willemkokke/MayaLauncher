@@ -78,6 +78,19 @@ namespace MayaLauncher
             }
         }
 
+        private static void PrintChunk(MayaIFFParser.Chunk chunk, int depth=0)
+        {
+            Debug.Write("".PadLeft(depth*2));
+            Debug.WriteLine(chunk);
+            if (chunk is MayaIFFParser.GroupChunk gc)
+            {
+                foreach (MayaIFFParser.Chunk c in gc.Children)
+                {
+                    PrintChunk(c, depth+1);
+                }
+            }
+        }
+
         private static MayaFileVersion ParseMayaBinaryFile(string file)
         {
             try
@@ -85,6 +98,7 @@ namespace MayaLauncher
                 var result = new MayaFileVersion();
                 MayaBinaryParser parser = new MayaBinaryParser(file);
                 parser.Parse();
+                PrintChunk(parser.Root);
 
                 return result;
             }
