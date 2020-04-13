@@ -71,7 +71,7 @@ namespace MayaLauncher
 
             if (Versions.Count > 0)
             {
-                latestVersion = Versions[Versions.Count - 1];
+                latestVersion = Versions[^1];
             }
         }
 

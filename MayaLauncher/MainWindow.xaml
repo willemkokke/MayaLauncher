@@ -5,8 +5,18 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MayaLauncher"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="Maya Launcher" Height="450" Width="800">
     <Grid>
-        
+        <TabControl>
+            <TabItem Header="Extensions">
+                <Grid Background="#FFE5E5E5"/>
+            </TabItem>
+            <TabItem Header="TabItem">
+                <Grid Background="#FFE5E5E5">
+
+                </Grid>
+            </TabItem>
+        </TabControl>
+
     </Grid>
 </Window>

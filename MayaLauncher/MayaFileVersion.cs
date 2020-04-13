@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 using System.IO;
-using System.Text;
+using MayaFileParser;
 
 namespace MayaLauncher
 {
@@ -33,41 +33,10 @@ namespace MayaLauncher
         {
             try 
             {
+                var parser = new AsciiParser(file);
                 var result = new MayaFileVersion();
-
-                using (var stream = new StreamReader(file))
-                {
-                    string requires = "requires maya ";
-                    string product = "fileInfo \"product\" ";
-                    string version = "fileInfo \"version\" ";
-                    string cut = "fileInfo \"cutIdentifier\" ";
-                    string createNode = "createNode ";
-
-                    string line = "";
-                    while ((line = stream.ReadLine()) != null)
-                    {
-                        if (line.StartsWith(requires))
-                        {
-                            result.Requires = line.Replace(requires, "").Trim(';').Trim('"');
-                        }
-                        else if (line.StartsWith(product))
-                        {
-                            result.Product = line.Replace(product, "").Trim(';').Trim('"');
-                        }
-                        else if (line.StartsWith(version))
-                        {
-                            result.Version = line.Replace(version, "").Trim(';').Trim('"');
-                        }
-                        else if (line.StartsWith(cut))
-                        {
-                            result.Cut = line.Replace(cut, "").Trim(';').Trim('"');
-                        }
-                        else if (line.StartsWith(createNode))
-                        {
-                            break;
-                        }
-                    }
-                }
+                FileSummary summary = parser.ParseFileInfo();
+                Debug.WriteLine(summary);
 
                 return result;
             }
@@ -78,13 +47,13 @@ namespace MayaLauncher
             }
         }
 
-        private static void PrintChunk(MayaIFFParser.Chunk chunk, int depth=0)
+        private static void PrintChunk(IFFParser.Chunk chunk, int depth=0)
         {
             Debug.Write("".PadLeft(depth*2));
-            Debug.WriteLine(chunk);
-            if (chunk is MayaIFFParser.GroupChunk gc)
+            Debug.WriteLine(chunk.ToString());
+            if (chunk is IFFParser.GroupChunk gc)
             {
-                foreach (MayaIFFParser.Chunk c in gc.Children)
+                foreach (IFFParser.Chunk c in gc.Children)
                 {
                     PrintChunk(c, depth+1);
                 }
@@ -96,9 +65,10 @@ namespace MayaLauncher
             try
             {
                 var result = new MayaFileVersion();
-                MayaBinaryParser parser = new MayaBinaryParser(file);
-                parser.Parse();
+                BinaryParser parser = new BinaryParser(file);
+                FileSummary summary = parser.ParseFileInfo();
                 PrintChunk(parser.Root);
+                Debug.WriteLine(summary);
 
                 return result;
             }

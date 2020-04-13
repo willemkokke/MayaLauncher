@@ -42,6 +42,10 @@
     <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\MayaExtensionHandler\MayaExtensionHandler.csproj" />
+    <ProjectReference Include="..\MayaFileParser\MayaFileParser.csproj" />
+  </ItemGroup>
+  <ItemGroup>
     <None Update="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
     </None>

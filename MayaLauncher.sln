@@ -3,7 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29509.3
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MayaLauncher", "MayaLauncher\MayaLauncher.csproj", "{65E560C5-AED9-4BB8-9EC3-DB2E279D1C6A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MayaLauncher", "MayaLauncher\MayaLauncher.csproj", "{65E560C5-AED9-4BB8-9EC3-DB2E279D1C6A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MayaFileParser", "MayaFileParser\MayaFileParser.csproj", "{3F0AE76B-51B3-4EB0-8D98-337982D7CAD6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MayaExtensionHandler", "MayaExtensionHandler\MayaExtensionHandler.csproj", "{996992B4-6D55-442E-B417-DA8045CE6461}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +19,14 @@ Global
 		{65E560C5-AED9-4BB8-9EC3-DB2E279D1C6A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{65E560C5-AED9-4BB8-9EC3-DB2E279D1C6A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{65E560C5-AED9-4BB8-9EC3-DB2E279D1C6A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3F0AE76B-51B3-4EB0-8D98-337982D7CAD6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3F0AE76B-51B3-4EB0-8D98-337982D7CAD6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3F0AE76B-51B3-4EB0-8D98-337982D7CAD6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3F0AE76B-51B3-4EB0-8D98-337982D7CAD6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{996992B4-6D55-442E-B417-DA8045CE6461}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{996992B4-6D55-442E-B417-DA8045CE6461}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{996992B4-6D55-442E-B417-DA8045CE6461}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{996992B4-6D55-442E-B417-DA8045CE6461}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Threading;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Shell;
 
@@ -51,27 +53,30 @@ namespace MayaLauncher
             if (Maya.Versions.Count > 0)
             {
                 FileAssociation.AssociateWithLauncher();
-                //FileAssociation.AssociateWithMayaVersion(Maya.LatestVersion);
             }
 
             CreateJumpList();
-
-            MainWindow = new MainWindow()
-            {
-                Width = 10,
-                Height = 10,
-                WindowStyle = WindowStyle.None,
-                ShowInTaskbar = true,
-                ShowActivated = true
-            };
-
-            MainWindow.Show();
 
             PipeManager = new NamedPipeManager("MayaLauncher");
             PipeManager.StartServer();
             PipeManager.ReceiveString += HandleNamedPipe_Message;
 
-            ProcessCommandLineArgs(Environment.GetCommandLineArgs());
+            bool showWindow = ProcessCommandLineArgs(Environment.GetCommandLineArgs());
+            if (showWindow)
+            {
+                MainWindow = new MainWindow()
+                {
+                    ShowInTaskbar = true,
+                    ShowActivated = true
+                };
+
+                MainWindow.Show();
+            }
+            else
+            {
+                Shutdown();
+            }
+
         }
 
         private void CreateJumpList()
@@ -99,55 +104,60 @@ namespace MayaLauncher
             Dispatcher.Invoke(() => ProcessCommandLineArgs(args));
         }
 
-        private void ProcessCommandLineArgs(IList<string> args)
+        private bool ProcessCommandLineArgs(IList<string> args)
         {
-            if (args == null || args.Count < 2)
-                return;
+            if (args == null || args.Count <= 2)
+                return true;
 
-            if ((args.Count > 2))
+            //args[0] always is the location of this exe so we need to check args[1]
+            string command = args[1].ToLowerInvariant();
+            string param = args[2];
+
+            if (command == "/maya")
             {
-                string command = args[1].ToLowerInvariant();
+                string version = param;
+                Maya.Launch(version, AdjustEnvironment);
+                return false;
+            }
+            else if (command == "/open")
+            {
+                string filename = param;
+                LaunchType launchType = LaunchType.VersionFromFile;
 
-                //the first index always contains the location of the exe so we need to check the second index
-                if (command == "/maya")
+                if (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift))
                 {
-                    string version = args[2];
-                    Maya.Launch(version, AdjustEnvironment);
+                    launchType = LaunchType.LatestVersion;
                 }
-                else if(command == "/open")
+                else if (Keyboard.IsKeyDown(Key.LeftAlt) || Keyboard.IsKeyDown(Key.RightAlt))
                 {
-                    string filename = args[2];
-                    LaunchType launchType = LaunchType.VersionFromFile;
-
-                    if (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift))
-                    {
-                        launchType = LaunchType.LatestVersion;
-                    }
-                    else if (Keyboard.IsKeyDown(Key.LeftAlt) || Keyboard.IsKeyDown(Key.RightAlt))
-                    {
-                        launchType = LaunchType.LatestVersion;
-                    }
-
-                    var fileVersion = MayaFileVersion.FromFile(filename);
-                    if (fileVersion != null)
-                    {
-                        Debug.WriteLine(fileVersion.Requires);
-                        Debug.WriteLine(fileVersion.Product);
-                        Debug.WriteLine(fileVersion.Version);
-                        Debug.WriteLine(fileVersion.Cut);
-                    }
-
-                    switch (launchType)
-                    {
-                        case LaunchType.VersionFromFile:
-                            break;
-                        case LaunchType.ChooseVersion:
-                            break;
-                        case LaunchType.LatestVersion:
-                            //Maya.Launch(Maya.LatestVersion, AdjustEnvironment, filename);
-                            break;
-                    }
+                    launchType = LaunchType.LatestVersion;
                 }
+
+                var fileVersion = MayaFileVersion.FromFile(filename);
+                if (fileVersion != null)
+                {
+                    Debug.WriteLine(fileVersion.Requires);
+                    Debug.WriteLine(fileVersion.Product);
+                    Debug.WriteLine(fileVersion.Version);
+                    Debug.WriteLine(fileVersion.Cut);
+                }
+
+                switch (launchType)
+                {
+                    case LaunchType.VersionFromFile:
+                        break;
+                    case LaunchType.ChooseVersion:
+                        break;
+                    case LaunchType.LatestVersion:
+                        //Maya.Launch(Maya.LatestVersion, AdjustEnvironment, filename);
+                        break;
+                }
+                return false;
+            }
+            else 
+            {
+                // unknown command
+                return true;
             }
         }
 
@@ -167,5 +177,16 @@ namespace MayaLauncher
             }
             environment[variable] = value;
         }
+
+        //[DllImport("user32")]
+        //public static extern uint SendMessage(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
+
+        //internal const int BCM_SETSHIELD = (0x1600 + 0x000C); //Elevated button
+
+        //private static void AddShieldToButton(Button b)
+        //{
+        //    b.FlatStyle = FlatStyle.System;
+        //    SendMessage(b.Handle, BCM_SETSHIELD, IntPtr.Zero, (IntPtr)1);
+        //}
     }
 }
