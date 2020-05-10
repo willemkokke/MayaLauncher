@@ -103,6 +103,7 @@ namespace MayaFileParser
                 throw new ParseException("Failed to parse Maya Ascii file", e);
             }
 
+            summary.Type = FileType.MayaAscii;
             return summary;
         }
 
@@ -206,6 +207,10 @@ namespace MayaFileParser
         {
             string key = command[command.Length - 2];
             string value = command[command.Length - 1];
+            if (value.EndsWith("\\n"))
+            {
+                value = value.Substring(0, value.Length - 2);
+            }
             summary.FileInfo[key] = value;
         }
 

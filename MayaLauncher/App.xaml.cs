@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Windows;
@@ -15,7 +16,6 @@ namespace MayaLauncher
     public enum LaunchType
     {
         VersionFromFile,
-        LatestVersion,
         ChooseVersion,
     }
 
@@ -27,6 +27,8 @@ namespace MayaLauncher
         public static Mutex Mutex { get; set; }
 
         public NamedPipeManager PipeManager { get; set; }
+
+        private List<Launchable> MayaVersions = null;
 
         public App()
         {
@@ -48,49 +50,46 @@ namespace MayaLauncher
 
         protected override void OnStartup(StartupEventArgs e)
         {
-            Maya.Initalise();
+            MayaVersions = MayaLaunchable.FindAll();
 
-            if (Maya.Versions.Count > 0)
-            {
-                FileAssociation.AssociateWithLauncher();
-            }
-
-            CreateJumpList();
+           CreateJumpList();
 
             PipeManager = new NamedPipeManager("MayaLauncher");
             PipeManager.StartServer();
             PipeManager.ReceiveString += HandleNamedPipe_Message;
 
-            bool showWindow = ProcessCommandLineArgs(Environment.GetCommandLineArgs());
-            if (showWindow)
+            ProcessCommandLineArgs(Environment.GetCommandLineArgs());
+        }
+
+        private Launchable FindLauchable(int version)
+        {
+            foreach(var v in MayaVersions)
             {
-                MainWindow = new MainWindow()
+                if (v.Version == version)
                 {
-                    ShowInTaskbar = true,
-                    ShowActivated = true
-                };
-
-                MainWindow.Show();
+                    return v;
+                }
             }
-            else
-            {
-                Shutdown();
-            }
-
+            return null;
         }
 
         private void CreateJumpList()
         {
-            JumpList jumpList = new JumpList();
-            JumpList.SetJumpList(Application.Current, jumpList);
-
-            foreach(var v in Maya.Versions)
+            JumpList jumpList = JumpList.GetJumpList(Application.Current);
+            if (jumpList == null)
+            {
+                jumpList = new JumpList();
+                jumpList.ShowRecentCategory = true;
+                JumpList.SetJumpList(Application.Current, jumpList);
+            }
+            foreach (var v in MayaVersions)
             {
                 JumpTask mayaTask = new JumpTask();
-                mayaTask.Title = v.Name;
-                mayaTask.Description = "Launch a new window";
+                mayaTask.Title = v.DisplayName;
+                mayaTask.Description = "Launch Maya " + v.DisplayName;
                 mayaTask.ApplicationPath = Assembly.GetEntryAssembly().Location.Replace(".dll", ".exe");
-                mayaTask.Arguments = "/maya " + v.Name;
+                mayaTask.IconResourcePath = v.ExecutablePath;
+                mayaTask.Arguments = "/maya " + v.Version.ToString();
                 mayaTask.CustomCategory = "Launch Maya";
                 jumpList.JumpItems.Add(mayaTask);
             }
@@ -102,12 +101,21 @@ namespace MayaLauncher
         {
             var args = JsonSerializer.Deserialize<string[]>(message);
             Dispatcher.Invoke(() => ProcessCommandLineArgs(args));
-        }
+        } 
 
-        private bool ProcessCommandLineArgs(IList<string> args)
+        private void ProcessCommandLineArgs(IList<string> args)
         {
-            if (args == null || args.Count <= 2)
-                return true;
+            if (args == null || args.Count < 2)
+            {
+                MainWindow = new MainWindow()
+                {
+                    ShowInTaskbar = true,
+                    ShowActivated = true
+                };
+
+                MainWindow.Show();
+                return;
+            }
 
             //args[0] always is the location of this exe so we need to check args[1]
             string command = args[1].ToLowerInvariant();
@@ -115,49 +123,76 @@ namespace MayaLauncher
 
             if (command == "/maya")
             {
-                string version = param;
-                Maya.Launch(version, AdjustEnvironment);
-                return false;
+                int version;
+                if (int.TryParse(param, out version))
+                {
+                    Launchable mayaVersion = FindLauchable(version);
+                    if (mayaVersion != null)
+                    {
+                        mayaVersion.Launch();
+                    }
+                }
             }
             else if (command == "/open")
             {
                 string filename = param;
+
+                var summary = MayaFileParser.FileSummary.FromFile(filename);
+                Debug.WriteLine(summary.ToString());
+
+                if (summary == null)
+                {
+                    MessageBox.Show($"Could not parse {filename}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
                 LaunchType launchType = LaunchType.VersionFromFile;
 
                 if (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift))
                 {
-                    launchType = LaunchType.LatestVersion;
-                }
-                else if (Keyboard.IsKeyDown(Key.LeftAlt) || Keyboard.IsKeyDown(Key.RightAlt))
-                {
-                    launchType = LaunchType.LatestVersion;
+                    launchType = LaunchType.ChooseVersion;
                 }
 
-                var fileVersion = MayaFileVersion.FromFile(filename);
-                if (fileVersion != null)
+                Launchable fileMayaVersion = null;
+
+                int version;
+                if (int.TryParse(summary.InstallVersion, out version))
                 {
-                    Debug.WriteLine(fileVersion.Requires);
-                    Debug.WriteLine(fileVersion.Product);
-                    Debug.WriteLine(fileVersion.Version);
-                    Debug.WriteLine(fileVersion.Cut);
+                    fileMayaVersion = FindLauchable(version);
+                    if (fileMayaVersion == null)
+                    {
+                        launchType = LaunchType.ChooseVersion;
+                    }
                 }
+                else
+                {
+                    launchType = LaunchType.ChooseVersion;
+                }
+
+                string argument = $"-file \"{param}\"";
 
                 switch (launchType)
                 {
                     case LaunchType.VersionFromFile:
+                        fileMayaVersion.Launch(new string[] { argument });
                         break;
                     case LaunchType.ChooseVersion:
-                        break;
-                    case LaunchType.LatestVersion:
-                        //Maya.Launch(Maya.LatestVersion, AdjustEnvironment, filename);
+                        string[] arguments = new string[] { argument };
+                        OpenWithLaunchableWindow window = new OpenWithLaunchableWindow(summary, arguments);
+                        window.Show();
                         break;
                 }
-                return false;
             }
-            else 
+            else if (command == "/info")
             {
-                // unknown command
-                return true;
+                string filename = param;
+
+                var summary = MayaFileParser.FileSummary.FromFile(filename);
+                if (summary != null)
+                {
+                    InfoWindow info = new InfoWindow(summary);
+                    info.Show();
+                }
             }
         }
 

@@ -17,6 +17,7 @@ namespace MayaExtensionHandler
     /// </summary>
     public partial class App : Application
     {
+        public const int SUCCESS = 0;
         public const int INVALID_ARGUMENTS = 1;
         public const int LAUNCHER_NOT_FOUND = 2;
         public const int MAYA_NOT_FOUND = 3;
@@ -32,7 +33,7 @@ namespace MayaExtensionHandler
             if (args == null || args.Count != 2)
                 return INVALID_ARGUMENTS;
 
-            //args[0] always is the location of this exe so we need to check args[1]
+            // args[0] always is the location of this exe so we need to check args[1]
             string command = args[1].ToLowerInvariant();
 
             switch (command)
@@ -46,7 +47,7 @@ namespace MayaExtensionHandler
                         {
                             return REGISTRY_MODIFICATION_FAILED;
                         }
-                        return 0;
+                        return SUCCESS;
                     }
                     return LAUNCHER_NOT_FOUND;
                 default:
@@ -61,7 +62,7 @@ namespace MayaExtensionHandler
                             {
                                 return REGISTRY_MODIFICATION_FAILED;
                             }
-                            return 0;
+                            return SUCCESS;
                         }
                         return MAYA_NOT_FOUND;
                     }

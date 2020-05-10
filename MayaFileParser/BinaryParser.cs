@@ -55,6 +55,13 @@ namespace MayaFileParser
             RegisterGroupHandler(XFRM, ParseCreateNode);
 
             Parse(MAYA);
+
+            summary.Type = FileType.MayaBinary64;
+            if (Root.Alignment == 4)
+            {
+                summary.Type = FileType.MayaBinary32;
+            }
+ 
             return summary;
         }
 
@@ -86,6 +93,10 @@ namespace MayaFileParser
                 {
                     string key = chunk.ReadString(stream);
                     string value = chunk.ReadString(stream);
+                    if (value.EndsWith("\\n"))
+                    {
+                        value = value.Substring(0, value.Length - 2);
+                    }
                     summary.FileInfo[key] = value;
                 }
                 else if (chunk.ChunkId == PLUG)
